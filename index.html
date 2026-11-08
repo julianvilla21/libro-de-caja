@@ -626,12 +626,17 @@ function vInicio(){
   const c = calc(ui.month);
   let h = banners();
   if(!state.movements.length && !state.reminders.length){
-    const nm = state.profile.name, from = state.profile.from;
-    return h + `<div class="welcome"><h2>Hola${nm?', '+esc(nm):''}. Arranquemos.</h2>
-      ${from?`<p><b>Esta app te la regaló ${esc(from)}</b> para que ordenes tus finanzas a tu manera. Es tuya: lo que cargues queda solo en tu teléfono.</p>`:''}
-      ${nm?'':`<form id="nameForm" class="inline-new" novalidate><input id="name-in" maxlength="40" placeholder="¿Cómo te llamás?" aria-label="Tu nombre"><button class="btn" type="submit">Guardar</button></form>`}
-      <p class="muted">Esta app hace una sola cosa: anotás lo que entra y lo que sale, y te dice cuánto te queda libre.</p>
-      <ol class="steps"><li>Tocá <b>+ Cargar</b> y elegí <b>Entró plata</b> para anotar tu ingreso del mes.</li><li>Cada vez que pagás algo, <b>+ Cargar → Gasté</b>.</li><li>Si separás plata para reinvertir, <b>Aparté</b>. Cuando la usás, <b>Invertí</b>.</li></ol>
+    const nm = state.profile.name;
+    const from = state.profile.from || 'Julián';
+    const isGift = !nm || from.toLowerCase() !== nm.toLowerCase().replace('julian','julián');
+    if(!nm) return h + `<div class="welcome"><h2>Hola, ¿cómo estás?</h2>
+      <p>¿Cómo es tu nombre?</p>
+      <form id="nameForm" class="inline-new" novalidate><input id="name-in" maxlength="40" placeholder="Escribí tu nombre" aria-label="Tu nombre" autocomplete="given-name"><button class="btn primary" type="submit">Continuar</button></form></div>`;
+    return h + `<div class="welcome"><h2>Hola, ${esc(nm)}.</h2>
+      ${isGift?`<p><b>Esta app te la regala ${esc(from)}</b> para que puedas llevar tus finanzas personales a tu manera. Es tuya y es privada: lo que cargues queda solo en tu teléfono.</p>`:''}
+      <p class="muted">Funciona así: anotás lo que te entra y lo que gastás, y la app te dice cuánto te queda libre.</p>
+      <ol class="steps"><li>Tocá <b>+ Cargar</b> y elegí <b>Entró plata</b> para anotar tu ingreso del mes.</li><li>Cada vez que pagás algo, <b>+ Cargar → Gasté</b>.</li><li>Si separás plata para ahorrar o invertir, <b>Aparté</b>. Cuando la usás, <b>Invertí</b>.</li></ol>
+      <p class="muted small">Las categorías (comida, alquiler, servicios…) las podés cambiar o crear las tuyas en ⚙ Ajustes, o en el momento de cargar con “+ Nueva”.</p>
       <div class="btn-row"><button class="btn primary" data-action="add">+ Cargar lo primero</button><button class="btn" data-go="guia">Leer la guía (2 min)</button><button class="btn" data-action="load-sample">Ver un ejemplo</button></div></div>`;
   }
   const soon = dueSoon();
