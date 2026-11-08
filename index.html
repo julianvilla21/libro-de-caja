@@ -271,6 +271,8 @@ details.more[open] summary{margin-bottom:10px}
 .screens b{display:block;font-family:var(--f-display)}
 .welcome{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;display:flex;flex-direction:column;gap:12px}
 .welcome h2{font-size:1.35rem}
+.motto{border-left:3px solid var(--fab);padding:4px 0 4px 12px;font-style:italic;color:var(--ink)}
+.motto b{font-style:normal}
 .steps{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:6px}
 
 textarea.export{width:100%;min-height:140px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.78rem;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
@@ -634,6 +636,7 @@ function vInicio(){
       <form id="nameForm" class="inline-new" novalidate><input id="name-in" maxlength="40" placeholder="Escribí tu nombre" aria-label="Tu nombre" autocomplete="given-name"><button class="btn primary" type="submit">Continuar</button></form></div>`;
     return h + `<div class="welcome"><h2>Hola, ${esc(nm)}.</h2>
       ${isGift?`<p><b>Esta app te la regala ${esc(from)}</b> para que puedas llevar tus finanzas personales a tu manera. Es tuya y es privada: lo que cargues queda solo en tu teléfono.</p>`:''}
+      <p class="motto">Recordá que la organización lo es todo. Y si no organizás tus finanzas, el dinero no llegará a vos (el dinero ama la organización). <b>Hacé tu parte.</b></p>
       <p class="muted">Funciona así: anotás lo que te entra y lo que gastás, y la app te dice cuánto te queda libre.</p>
       <ol class="steps"><li>Tocá <b>+ Cargar</b> y elegí <b>Entró plata</b> para anotar tu ingreso del mes.</li><li>Cada vez que pagás algo, <b>+ Cargar → Gasté</b>.</li><li>Si separás plata para ahorrar o invertir, <b>Aparté</b>. Cuando la usás, <b>Invertí</b>.</li></ol>
       <p class="muted small">Las categorías (comida, alquiler, servicios…) las podés cambiar o crear las tuyas en ⚙ Ajustes, o en el momento de cargar con “+ Nueva”.</p>
