@@ -393,10 +393,10 @@ function parseAmount(raw){
 
 /* Los cuatro tipos de movimiento */
 const KINDS = {
-  in:     {tile:'Entró plata', short:'Entró', hint:'Sueldo, ganancia del café, un cobro', title:'Entró plata', descLabel:'¿De dónde vino? (opcional)', sign:'+ ', cls:'c-in', group:'Entradas'},
+  in:     {tile:'Entró plata', short:'Entró', hint:'Sueldo, una venta, un cobro', title:'Entró plata', descLabel:'¿De dónde vino? (opcional)', sign:'+ ', cls:'c-in', group:'Entradas'},
   out:    {tile:'Gasté', short:'Gasté', hint:'Algo que ya pagaste', title:'Gasté', descLabel:'¿En qué? (opcional)', sign:'− ', cls:'c-out', group:'Gastos'},
   save:   {tile:'Aparté', short:'Aparté', hint:'Plata que separás para algo y todavía no usaste', title:'Aparté plata', descLabel:'¿Para qué? (opcional)', sign:'', cls:'', group:'Para qué apartás'},
-  invest: {tile:'Invertí', short:'Invertí', hint:'Plata que pusiste en trading, plazo fijo, el café…', title:'Invertí', descLabel:'Detalle (opcional)', sign:'', cls:'c-inv', group:'Tipos de inversión'},
+  invest: {tile:'Invertí', short:'Invertí', hint:'Plata que pusiste en un plazo fijo, acciones, un emprendimiento…', title:'Invertí', descLabel:'Detalle (opcional)', sign:'', cls:'c-inv', group:'Tipos de inversión'},
 };
 const KIND_ORDER = ['in','out','save','invest'];
 
@@ -421,7 +421,7 @@ applyPal(getPal());
 function defaultAreas(){ return [
   {id:'ar-fijos', name:'Gastos fijos', pct:null},
   {id:'ar-dia', name:'Gastos del día a día', pct:null},
-  {id:'ar-formacion', name:'Formación y comunidad', pct:null},
+  {id:'ar-formacion', name:'Educación y formación', pct:null},
   {id:'ar-ahorro', name:'Ahorro', pct:null},
   {id:'ar-reinversion', name:'Reinversión', pct:null},
 ]; }
@@ -431,25 +431,25 @@ function defaultAreaFor(c){ if(c.kind==='in') return null; if(DEFAULT_AREA[c.id]
 function defaultCategories(){
   const mk=(id,kind,name)=>({id,kind,name,hidden:false,limit:null});
   const list = [
-    mk('in-principal','in','Ingreso principal'), mk('in-cafe','in','Café de especialidad'), mk('in-inversiones','in','Rendimientos de inversiones'), mk('in-otros','in','Otros ingresos'),
-    mk('g-mc','out','Millonarios Conscientes'), mk('g-vivienda','out','Vivienda'), mk('g-comida','out','Comida'), mk('g-transporte','out','Transporte'), mk('g-salud','out','Salud'),
-    mk('g-servicios','out','Servicios'), mk('g-deudas','out','Deudas'), mk('g-formacion','out','Formación'), mk('g-ocio','out','Ocio'), mk('g-otros','out','Otros gastos'),
+    mk('in-principal','in','Sueldo / ingreso principal'), mk('in-cafe','in','Ingresos extra'), mk('in-inversiones','in','Rendimientos de inversiones'), mk('in-otros','in','Otros ingresos'),
+    mk('g-vivienda','out','Vivienda'), mk('g-comida','out','Comida'), mk('g-transporte','out','Transporte'), mk('g-salud','out','Salud'),
+    mk('g-servicios','out','Servicios'), mk('g-deudas','out','Deudas'), mk('g-formacion','out','Educación y formación'), mk('g-ocio','out','Ocio'), mk('g-otros','out','Otros gastos'),
     mk('s-reinvertir','save','Para reinvertir'), mk('s-colchon','save','Colchón de seguridad'), mk('s-metas','save','Metas'), mk('s-otros','save','Otros objetivos'),
-    mk('i-trading','invest','Trading / pruebas de fondeo'), mk('i-plazo','invest','Plazo fijo / cuenta remunerada'), mk('i-cafe','invest','Café de especialidad (emprendimiento)'), mk('i-otra','invest','Otra inversión'),
+    mk('i-trading','invest','Acciones, cripto o trading'), mk('i-plazo','invest','Plazo fijo / cuenta remunerada'), mk('i-cafe','invest','Emprendimiento propio'), mk('i-otra','invest','Otra inversión'),
   ];
   list.forEach(c=>c.areaId=defaultAreaFor(c));
   return list;
 }
-const emptyState = () => ({version:3, sample:false, categories:defaultCategories(), movements:[], reminders:[], notice:'', areas:defaultAreas(), plan:{goal:null, cur:'USD'}, fx:{rate:null, updatedAt:0, source:'', parts:[]}});
+const emptyState = () => ({version:3, sample:false, profile:{name:'', from:''}, categories:defaultCategories(), movements:[], reminders:[], notice:'', areas:defaultAreas(), plan:{goal:null, cur:'USD'}, fx:{rate:null, updatedAt:0, source:'', parts:[]}});
 function sampleState(){
   const ym=ymOf(todayStr()), next=addMonths(ym,1);
   const s=emptyState(); s.sample=true;
   s.movements=[
     {id:uid(),kind:'in',amount:30000000,date:ym+'-01',categoryId:'in-principal',desc:'Ingreso mensual base',entity:'',maturity:'',closed:false},
-    {id:uid(),kind:'out',amount:23000000,date:ym+'-05',categoryId:'g-mc',desc:'Cuota del mes',entity:'',maturity:'',closed:false},
+    {id:uid(),kind:'out',amount:23000000,date:ym+'-05',categoryId:'g-vivienda',desc:'Alquiler y expensas',entity:'',maturity:'',closed:false},
     {id:uid(),kind:'save',amount:7000000,date:ym+'-05',categoryId:'s-reinvertir',desc:'Remanente del mes',entity:'',maturity:'',closed:false},
   ];
-  s.reminders=[{id:uid(),kind:'pago',name:'Millonarios Conscientes',amount:23000000,due:next+'-05',done:false,monthly:true}];
+  s.reminders=[{id:uid(),kind:'pago',name:'Alquiler',amount:23000000,due:next+'-05',done:false,monthly:true}];
   return s;
 }
 
@@ -513,7 +513,8 @@ function sanitize(s){
   const rems = (Array.isArray(s.reminders)?s.reminders:[]).filter(r=>r && typeof r.name==='string' && Number.isInteger(r.amount) && r.amount>0 && isValidDate(r.due))
     .map(r=>({id:typeof r.id==='string'?r.id:uid(), kind:r.kind==='cobro'?'cobro':'pago', name:r.name.slice(0,80), amount:r.amount, due:r.due, done:!!r.done, monthly:!!r.monthly}));
   const p = s.plan||{}, fx = s.fx||{};
-  return {version:3, sample:!!s.sample, categories:cats, movements:movs, reminders:rems, notice:typeof s.notice==='string'?s.notice:'', areas,
+  const pr = s.profile||{};
+  return {version:3, sample:!!s.sample, profile:{name:String(pr.name||'').trim().slice(0,40), from:String(pr.from||'').trim().slice(0,40)}, categories:cats, movements:movs, reminders:rems, notice:typeof s.notice==='string'?s.notice:'', areas,
     plan:{goal: Number.isInteger(p.goal)&&p.goal>0?p.goal:null, cur: p.cur==='ARS'?'ARS':'USD'},
     fx:{rate: Number.isFinite(fx.rate)&&fx.rate>0?fx.rate:null, updatedAt: Number(fx.updatedAt)||0, source: ['auto','manual','oficial'].includes(fx.source)?fx.source:'',
       parts: Array.isArray(fx.parts) ? fx.parts.filter(x=>x && typeof x.name==='string' && Number(x.ask)>0).slice(0,3).map(x=>{ const bid=Number(x.bid)>0?Number(x.bid):Number(x.ask), ask=Number(x.ask); return {name:x.name.slice(0,30), bid, ask, mid:Number(x.mid)>0?Number(x.mid):avg([bid,ask])}; }) : []}};
@@ -625,7 +626,10 @@ function vInicio(){
   const c = calc(ui.month);
   let h = banners();
   if(!state.movements.length && !state.reminders.length){
-    return h + `<div class="welcome"><h2>Hola, Julián. Arranquemos.</h2>
+    const nm = state.profile.name, from = state.profile.from;
+    return h + `<div class="welcome"><h2>Hola${nm?', '+esc(nm):''}. Arranquemos.</h2>
+      ${from?`<p><b>Esta app te la regaló ${esc(from)}</b> para que ordenes tus finanzas a tu manera. Es tuya: lo que cargues queda solo en tu teléfono.</p>`:''}
+      ${nm?'':`<form id="nameForm" class="inline-new" novalidate><input id="name-in" maxlength="40" placeholder="¿Cómo te llamás?" aria-label="Tu nombre"><button class="btn" type="submit">Guardar</button></form>`}
       <p class="muted">Esta app hace una sola cosa: anotás lo que entra y lo que sale, y te dice cuánto te queda libre.</p>
       <ol class="steps"><li>Tocá <b>+ Cargar</b> y elegí <b>Entró plata</b> para anotar tu ingreso del mes.</li><li>Cada vez que pagás algo, <b>+ Cargar → Gasté</b>.</li><li>Si separás plata para reinvertir, <b>Aparté</b>. Cuando la usás, <b>Invertí</b>.</li></ol>
       <div class="btn-row"><button class="btn primary" data-action="add">+ Cargar lo primero</button><button class="btn" data-go="guia">Leer la guía (2 min)</button><button class="btn" data-action="load-sample">Ver un ejemplo</button></div></div>`;
@@ -633,6 +637,7 @@ function vInicio(){
   const soon = dueSoon();
   if(soon.length) h += `<div class="card"><div class="card-head"><h2>Para estos días</h2><button class="link-btn" data-go="pagos">Ver todos</button></div><div class="list">${soon.slice(0,3).map(r=>`<div class="prow"><button class="mrow" data-rem-edit="${r.id}"><span class="mi"><span class="t">${esc(r.name)}${daysUntil(r.due)<0?'<span class="tag red">Vencido</span>':''}</span><span class="s">${r.kind==='cobro'?'Te pagan · ':''}${remWhen(r)}</span></span><span class="ma ${r.kind==='cobro'?'c-in':'c-out'}">${money(r.amount)}</span></button><div class="act"><button class="btn sm primary" data-rem-done="${r.id}">${r.kind==='cobro'?'Ya cobré':'Ya pagué'}</button></div></div>`).join('')}</div></div>`;
   if(!c.ms.length) return h + `<div class="card"><div class="empty">Todavía no cargaste nada en ${esc(monthName(ui.month))}.<br><br><button class="btn primary" data-action="add">+ Cargar</button></div></div>`;
+  if(state.profile.name) h = `<p class="muted" style="margin:0">Hola, ${esc(state.profile.name)}.</p>` + h;
   const base = Math.max(c.inc, c.out+c.inv+c.sav, 1);
   const w = v => (v/base*100).toFixed(2)+'%';
   h += `<section class="hero"><span class="label">Libre para usar</span><span class="big">${money(c.free)}</span>${rate()?`<span class="sub">≈ ${usd(c.free)} al dólar de hoy</span>`:''}
@@ -733,7 +738,7 @@ function vPagos(){
   return `<section class="card"><div class="card-head"><h2>Tengo que pagar</h2><button class="btn sm primary" data-action="rem-new">+ Agregar</button></div>
       ${pagos.length?`<div class="list">${pagos.map(row).join('')}</div>`:'<div class="empty">No tenés pagos anotados. Agregá alquiler, cuotas, servicios…</div>'}</section>
     <section class="card"><div class="card-head"><h2>Me tienen que pagar</h2><button class="btn sm" data-action="rem-new" data-kind="cobro">+ Agregar</button></div>
-      ${cobros.length?`<div class="list">${cobros.map(row).join('')}</div>`:'<div class="empty">Nada por cobrar. Acá podés anotar, por ejemplo, una ganancia del café que esperás.</div>'}
+      ${cobros.length?`<div class="list">${cobros.map(row).join('')}</div>`:'<div class="empty">Nada por cobrar. Acá podés anotar, por ejemplo, una plata que te deben.</div>'}
       <p class="small muted">Lo que esperás cobrar no suma hasta que tocás “Ya cobré”.</p></section>
     ${done.length?`<details class="card more"><summary>Hechos (${done.length})</summary><div class="list">${done.map(row).join('')}</div></details>`:''}
     <p class="small muted">“Ya pagué” abre el gasto listo para guardar, así queda en tu mes. Los avisos aparecen al abrir la app. Para que el teléfono te avise solo, tocá un pago y elegí “Agregar a Google Calendar”.</p>`;
@@ -818,7 +823,7 @@ function vInversion(){
   const closed = inv.filter(m=>m.closed).sort((a,b)=>b.date.localeCompare(a.date));
   const saves = c.ms.filter(m=>m.kind==='save');
   const types = catsOf('invest').map(t=>({t, month:sum(c.ms.filter(m=>m.kind==='invest'&&m.categoryId===t.id)), act:sum(active.filter(m=>m.categoryId===t.id)), n:active.filter(m=>m.categoryId===t.id).length})).filter(o=>!o.t.hidden||o.act||o.month);
-  return `<div class="notice risk"><span class="grow"><strong>Trading y fondeo son actividades de riesgo,</strong> y toda inversión puede perder valor. Acá solo anotás lo que decidís: la app no calcula ganancias ni te dice cuánto invertir.</span></div>
+  return `<div class="notice risk"><span class="grow"><strong>Toda inversión tiene riesgo:</strong> el trading, las criptomonedas y las acciones pueden perder valor. Acá solo anotás lo que decidís: la app no calcula ganancias ni te dice cuánto invertir.</span></div>
     <div class="tri">
       <div class="mini"><span class="label">Apartado</span><span class="v">${money(c.sav)}</span><span class="small muted">este mes</span></div>
       <div class="mini"><span class="label">Invertido</span><span class="v c-inv">${money(c.inv)}</span><span class="small muted">este mes</span></div>
@@ -844,6 +849,9 @@ function vAjustes(){
   return `<section class="card"><h2>Colores</h2>
       <p class="small muted">Elegí cómo querés ver la app. Se guarda en este dispositivo. En todas, verde es lo que entra y rojo lo que pagás.</p>
       <div class="pals" role="group" aria-label="Paletas de colores">${autoCard}${Object.entries(PALETTES).map(([k,d])=>palCard(k,d)).join('')}</div>
+    </section>
+    <section class="card"><h2>Tu nombre</h2>
+      <form id="nameForm" class="inline-new" novalidate><input id="name-in" maxlength="40" value="${esc(state.profile.name)}" placeholder="¿Cómo te llamás?" aria-label="Tu nombre"><button class="btn" type="submit">Guardar</button></form>
     </section>
     <section class="card"><h2>Categorías</h2>
       <div class="chips" role="group" aria-label="Tipo de categoría">${KIND_ORDER.map(x=>`<button class="chip" aria-pressed="${x===k}" data-catkind="${x}">${KINDS[x].group}</button>`).join('')}</div>
@@ -881,16 +889,16 @@ function vGuia(){
     <section class="card"><h3>1. Los cuatro botones</h3>
       <p>Tocás <b>+ Cargar</b> y elegís uno:</p>
       <div class="tiles">
-        <div class="tile t-in"><b>Entró plata</b><span>Tu ingreso, una ganancia del café, un cobro.</span></div>
-        <div class="tile t-out"><b>Gasté</b><span>Algo que pagaste: Millonarios Conscientes, comida, servicios.</span></div>
+        <div class="tile t-in"><b>Entró plata</b><span>Tu sueldo, una venta, un cobro.</span></div>
+        <div class="tile t-out"><b>Gasté</b><span>Algo que pagaste: alquiler, comida, servicios.</span></div>
         <div class="tile t-save"><b>Aparté</b><span>Plata que separás para algo (reinvertir, colchón) pero todavía es tuya y no la usaste.</span></div>
-        <div class="tile t-inv"><b>Invertí</b><span>Plata que ya pusiste en algo: trading, plazo fijo, el café.</span></div>
+        <div class="tile t-inv"><b>Invertí</b><span>Plata que ya pusiste en algo: un plazo fijo, acciones, un emprendimiento.</span></div>
       </div>
       <p>Después ponés el importe, tocás una categoría y listo. La fecha arranca en hoy.</p></section>
     <section class="card"><h3>2. Cómo se calcula (con tu ejemplo)</h3>
-      <p>Entraron $300.000, pagaste $230.000 de Millonarios Conscientes y apartaste los $70.000 que sobraron para reinvertir:</p>
+      <p>Por ejemplo: entraron $300.000, gastaste $230.000 en alquiler y gastos del mes, y apartaste los $70.000 que sobraron para ahorrar:</p>
       ${formula(ex)}
-      <p><b>Disponible</b> es la plata que tenés. <b>Libre</b> es la que podés usar sin tocar lo que apartaste. Los porcentajes se calculan sobre lo que entró: Millonarios Conscientes es el 76,67% y el remanente el 23,33%.</p></section>
+      <p><b>Disponible</b> es la plata que tenés. <b>Libre</b> es la que podés usar sin tocar lo que apartaste. Los porcentajes se calculan sobre lo que entró: en el ejemplo, los gastos son el 76,67% y lo que sobró el 23,33%.</p></section>
     <section class="card"><h3>3. Aparté vs. Invertí</h3>
       <ul><li><b>Aparté</b>: la plata sigue con vos, solo la separaste. No baja tu “Disponible”, sí baja tu “Libre”.</li>
       <li><b>Invertí</b>: la plata salió hacia una inversión. Baja tu “Disponible”.</li>
@@ -899,7 +907,7 @@ function vGuia(){
       <ol><li><b>Cuando cobrás:</b> + Cargar → Entró plata.</li>
       <li><b>Cuando pagás algo:</b> + Cargar → Gasté. Tarda 10 segundos.</li>
       <li><b>Cuando cobrás y separás para reinvertir:</b> + Cargar → Aparté → “Para reinvertir”.</li>
-      <li><b>Cuando invertís:</b> + Cargar → Invertí, elegís el tipo (trading, plazo fijo, café…).</li>
+      <li><b>Cuando invertís:</b> + Cargar → Invertí, elegís el tipo (plazo fijo, acciones, emprendimiento…).</li>
       <li><b>Una vez por mes:</b> mirá Inicio, revisá en qué gastaste y ajustá tus topes si querés.</li></ol></section>
     <section class="card"><h3>5. Las pantallas</h3>
       <div class="screens">
@@ -977,7 +985,7 @@ function movementForm(m, extra={}){
     <div id="invExtra" class="stack" ${kind0==='invest'?'':'hidden'}>
       ${isNew?`<div class="field" id="fromSaveWrap"><label for="m-from">¿Sale de lo apartado?</label><select id="m-from"><option value="">No, sale de plata libre</option></select><span class="hint">Si elegís uno, lo apartado se achica para no contar dos veces.</span></div>`:''}
       <details class="more" ${m&&(m.entity||m.maturity)?'open':''}><summary>Más datos (opcional)</summary><div class="stack">
-        <div class="field"><label for="m-entity">Dónde (banco, broker, firma de fondeo, KAFFA…)</label><input id="m-entity" maxlength="80" value="${esc(m?m.entity:'')}"></div>
+        <div class="field"><label for="m-entity">Dónde (banco, billetera, broker, emprendimiento…)</label><input id="m-entity" maxlength="80" value="${esc(m?m.entity:'')}"></div>
         <div class="field"><label for="m-maturity">Vence o termina</label><input id="m-maturity" type="date" value="${m?m.maturity:''}"></div></div></details>
       ${!isNew?`<label class="check"><input type="checkbox" id="m-closed" ${m.closed?'checked':''}> Ya terminó (finalizada)</label>`:''}
     </div>
@@ -1067,7 +1075,7 @@ function reminderForm(r, extra={}){
   openModal(`<div class="sheet-head"><h2>${isNew?'Nuevo pago o cobro':'Editar'}</h2><button class="icon-btn" data-close aria-label="Cerrar">✕</button></div>
   <form id="remForm" class="stack" novalidate>
     <div class="seg4" style="grid-template-columns:1fr 1fr" role="radiogroup" aria-label="Tipo"><label><input type="radio" name="rkind" value="pago" ${r.kind==='pago'?'checked':''}>Tengo que pagar</label><label><input type="radio" name="rkind" value="cobro" ${r.kind==='cobro'?'checked':''}>Me van a pagar</label></div>
-    <div class="field"><label for="r-name">¿Qué es?</label><input id="r-name" maxlength="80" value="${esc(r.name)}" placeholder="Alquiler, Millonarios Conscientes, ganancia del café…" ${isNew?'autofocus':''}><span class="err" data-err="name"></span></div>
+    <div class="field"><label for="r-name">¿Qué es?</label><input id="r-name" maxlength="80" value="${esc(r.name)}" placeholder="Alquiler, la tarjeta, una plata que te deben…" ${isNew?'autofocus':''}><span class="err" data-err="name"></span></div>
     <div class="field"><label for="r-amount">Importe</label><input id="r-amount" class="big" inputmode="decimal" placeholder="$ 0" value="${r.amount?amountToInput(r.amount):''}"><span class="err" data-err="amount"></span></div>
     <div class="field"><label for="r-due">Fecha</label><input id="r-due" type="date" value="${r.due}"><span class="err" data-err="due"></span></div>
     <label class="check"><input type="checkbox" id="r-monthly" ${r.monthly?'checked':''}> Se repite todos los meses</label>
@@ -1183,8 +1191,8 @@ document.addEventListener('click', async e=>{
     case 'dismiss-notice': state.notice=''; save(); render(); break;
     case 'dismiss-sample': state.sample=false; save(); render(); break;
     case 'load-sample': if(state.movements.length && !(await askConfirm('Se reemplazan tus datos por un ejemplo. Exportá una copia antes si querés guardar lo tuyo.','Cargar ejemplo'))) break;
-      state=sampleState(); ui.month=ymOf(todayStr()); save(); go('inicio'); toast('Ejemplo cargado'); break;
-    case 'clear-all': if(await askConfirm('Se borran todos tus movimientos, pagos y cobros. Las categorías vuelven a las de siempre. No se puede deshacer.','Borrar todo')){ state=emptyState(); save(); go('inicio'); toast('Listo, empezás de cero'); } break;
+      { const keep=state.profile; state=sampleState(); state.profile=keep; } ui.month=ymOf(todayStr()); save(); go('inicio'); toast('Ejemplo cargado'); break;
+    case 'clear-all': if(await askConfirm('Se borran todos tus movimientos, pagos y cobros. Las categorías vuelven a las de siempre. No se puede deshacer.','Borrar todo')){ const keep=state.profile; state=emptyState(); state.profile=keep; save(); go('inicio'); toast('Listo, empezás de cero'); } break;
     case 'toggle-cat': { const c=cat(id); if(c){ c.hidden=!c.hidden; save(); render(); } break; }
     case 'del-cat': { const c=cat(id); if(!c) break; const n=state.movements.filter(m=>m.categoryId===id).length;
       const fb = catsOf(c.kind).find(x=>x.id!==id && /^otr/i.test(x.name)) || catsOf(c.kind).find(x=>x.id!==id);
@@ -1236,6 +1244,7 @@ document.addEventListener('submit', async e=>{
   if(f.id==='areaForm'){ e.preventDefault(); const name=$('#area-new').value.trim(); if(!name) return;
     if(state.areas.some(a=>a.name.toLowerCase()===name.toLowerCase())){ toast('Ya existe un área con ese nombre'); return; }
     state.areas.push({id:'ar-'+uid(), name:name.slice(0,50), pct:null}); save(); render(); toast('Área agregada. Elegí qué categorías entran en ella.'); }
+  if(f.id==='nameForm'){ e.preventDefault(); state.profile.name=$('#name-in').value.trim().slice(0,40); save(); render(); toast(state.profile.name?'Hola, '+state.profile.name:'Nombre borrado'); return; }
   if(f.id==='pinForm'){ e.preventDefault(); const p1=$('#pin1').value, p2=$('#pin2').value;
     if(!/^\d{4,8}$/.test(p1)){ $('#pinErr').textContent='Usá entre 4 y 8 números.'; return; }
     if(p1!==p2){ $('#pinErr').textContent='No coinciden.'; return; }
@@ -1251,6 +1260,15 @@ $('#thisMonth').addEventListener('click',()=>{ ui.month=ymOf(todayStr()); render
 window.addEventListener('hashchange',()=>{ const h=location.hash.slice(1); if(VIEWS.includes(h) && h!==ui.view){ ui.view=h; render(); } });
 
 { const h=(location.hash||'').slice(1); if(VIEWS.includes(h)) ui.view=h; }
+/* Link de regalo: ?para=Nombre&de=Quién. Solo completa el nombre la primera vez; después se saca de la dirección. */
+try{
+  const q = new URLSearchParams(location.search), para=(q.get('para')||'').trim(), de=(q.get('de')||'').trim();
+  if(para || de){
+    if(para && !state.profile.name) state.profile.name = para.slice(0,40);
+    if(de && !state.profile.from) state.profile.from = de.slice(0,40);
+    history.replaceState(null, '', location.pathname + location.hash);
+  }
+}catch(e){}
 save();
 try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(()=>{}); }catch(e){}
 if(getPin() && pinSupported) showLock(); else render();

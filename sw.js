@@ -1,5 +1,5 @@
 // Libro de Caja: guarda la app para que abra sin conexión. Tus datos NO pasan por acá: viven en el almacenamiento del navegador.
-const CACHE = 'libro-de-caja-v8';
+const CACHE = 'libro-de-caja-v9';
 const CORE = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './favicon.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE))); self.skipWaiting(); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k))))); self.clients.claim(); });
